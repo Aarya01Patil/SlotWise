@@ -1,0 +1,77 @@
+{
+  "mode": "live",
+  "checked_at": "2026-10-07T19:12:08.940109+00:00",
+  "config": {
+    "mode": "live",
+    "provider": "groq",
+    "provider_label": "Groq",
+    "model": "openai/gpt-oss-20b",
+    "ready": true,
+    "key_name": "GROQ_API_KEY",
+    "today": "2026-10-08",
+    "timezone": "Asia/Kolkata",
+    "policy": {
+      "version": 1,
+      "conflict_action": "handoff"
+    }
+  },
+  "booking_verified": true,
+  "guardrail_verified": true,
+  "transcript": [
+    {
+      "role": "assistant",
+      "kind": "message",
+      "text": "Hi, I'm SlotWise. Which specialty, date, and time of day would you prefer? Please use synthetic details only."
+    },
+    {
+      "role": "patient",
+      "text": "Write binary search code"
+    },
+    {
+      "role": "assistant",
+      "text": "I can only help with your own clinic appointment. I can't answer coding, harmful, or unrelated requests. For booking, tell me the specialty, date, and preferred time.",
+      "kind": "guardrail"
+    },
+    {
+      "role": "patient",
+      "text": "General tomorrow morning"
+    },
+    {
+      "role": "assistant",
+      "text": "These available appointments match your preferences. Choose one to review before booking.",
+      "kind": "offers"
+    },
+    {
+      "role": "patient",
+      "text": "Choose appointment"
+    },
+    {
+      "role": "assistant",
+      "text": "Please confirm: general with Dr Nila Shah, Fri, 09 Oct 2026 at 09:00 AM IST (Asia/Kolkata), 30 minutes, SlotWise Demo Clinic. Reply 'yes' or use Confirm appointment.",
+      "kind": "confirmation"
+    },
+    {
+      "role": "patient",
+      "text": "confirm appointment"
+    },
+    {
+      "role": "assistant",
+      "text": "Booked: Dr Nila Shah, Fri, 09 Oct 2026 at 09:00 AM IST (Asia/Kolkata), 30 minutes, SlotWise Demo Clinic. Reference SW-CAFB43D246.",
+      "kind": "booking_receipt"
+    }
+  ],
+  "receipt": {
+    "id": "SW-CAFB43D246",
+    "patient_id": "synthetic-c418a2a0540149f490377fd8a50dca35",
+    "slot_id": "general-2026-10-09-0900",
+    "attempt_key": "cbd42b88f440450d9cb09d0c935abd0c",
+    "specialty": "general",
+    "doctor": "Dr Nila Shah",
+    "date": "2026-10-09",
+    "period": "morning",
+    "starts_at": "2026-10-09T09:00:00+05:30",
+    "duration_minutes": 30,
+    "location": "SlotWise Demo Clinic"
+  },
+  "notice": "Real Groq HTTP booking smoke check; not the scored evaluation loop."
+}
