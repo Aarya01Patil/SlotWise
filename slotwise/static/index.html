@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SlotWise · Scheduling with care</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/style.css">
+  <script defer src="/static/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <aside class="sidebar">
+    <a class="brand" href="#chat" aria-label="SlotWise home"><span class="brand-mark">s<span>·</span></span>SlotWise</a>
+    <div class="workspace-label">DEMO WORKSPACE</div>
+    <nav aria-label="Main navigation">
+      <button class="nav-item active" id="chat-nav" aria-current="page"><span aria-hidden="true">↗</span> Patient conversation</button>
+      <button class="nav-item" id="eval-nav"><span aria-hidden="true">◎</span> Evaluation lab</button>
+    </nav>
+    <div class="sidebar-note"><span class="status-dot" aria-hidden="true"></span> Synthetic clinic<br><small>No real patient data.</small></div>
+    <div class="sidebar-bottom">Better from each mistake.<br><span>Safer at every step.</span></div>
+  </aside>
+  <main id="main">
+    <header class="topbar"><span>APPOINTMENT ASSISTANT</span><span class="mode-pill" id="mode-badge">Loading…</span></header>
+    <div class="notice" id="mode-notice" role="status"></div>
+    <section id="chat-view" aria-labelledby="chat-title">
+      <div class="page-heading"><div><p class="eyebrow">A LITTLE LESS FRICTION</p><h1 id="chat-title">Your next visit, sorted.</h1><p>Tell us what works for you. We’ll find a time, then ask before booking.</p></div><button class="button secondary" id="new-chat">New conversation</button></div>
+      <div class="chat-layout">
+        <div class="conversation-panel">
+          <div class="panel-heading"><div><span class="status-dot" aria-hidden="true"></span><strong>SlotWise assistant</strong><small>Scheduling support · synthetic patient</small></div><span class="small-badge" id="state-label">Ready</span></div>
+          <div id="messages" class="messages" role="log" aria-live="polite" aria-label="Conversation"></div>
+          <div id="appointment-options" class="appointment-options"></div>
+          <p id="chat-error" class="error" role="alert"></p>
+          <form id="chat-form" class="composer">
+            <label for="message">Your message</label>
+            <div class="input-row"><textarea id="message" rows="2" maxlength="2000" placeholder="A general appointment tomorrow morning…" required></textarea><button id="send" class="button primary" type="submit">Send <span aria-hidden="true">↗</span></button></div>
+            <small>Appointment scheduling only · Enter to send · Shift + Enter for a new line</small>
+          </form>
+        </div>
+        <aside class="visit-panel" aria-label="Appointment details">
+          <p class="eyebrow">YOUR VISIT</p><h2 id="visit-title">Details take shape here.</h2><p id="visit-description">We’ll confirm the doctor, date, time, and location together.</p>
+          <dl id="visit-details"><dt>Clinic timezone</dt><dd>Asia/Kolkata (IST)</dd></dl>
+          <div class="safety-note"><strong>Always your decision.</strong><p>Nothing is booked until you confirm the exact appointment. Availability can change before confirmation.</p></div>
+          <div class="clinic-card"><span class="small-badge">DEMO CLINIC</span><h3>A small, clear scope.</h3><p>General practice, dental, dermatology.<br>30-minute appointments.</p><small id="clinic-date"></small></div>
+        </aside>
+      </div>
+    </section>
+    <section id="eval-view" hidden aria-labelledby="eval-title">
+      <div class="page-heading"><div><p class="eyebrow">EVIDENCE OVER ASSUMPTIONS</p><h1 id="eval-title">A mistake. A change. A better run.</h1><p>Same scenarios. Same safety gates. One bounded recovery improvement.</p></div></div>
+      <div class="eval-controls"><div><label for="repeats">Runs per scenario</label><select id="repeats"><option value="1">1 · quick walkthrough</option><option value="2" selected>2 · repeat check</option><option value="3">3 · extra evidence</option></select></div><button class="button primary" id="run-eval">Run improvement loop <span aria-hidden="true">↗</span></button><p id="eval-progress" role="status">No evaluation running.</p></div>
+      <p id="eval-error" class="error" role="alert"></p>
+      <div id="operator-controls" hidden><label for="operator-token">Operator access token (evaluation runs only)</label><input id="operator-token" type="password" autocomplete="off" maxlength="200"><small>Read-only evidence is public. The token stays in this page’s memory.</small></div>
+      <div id="eval-empty" class="empty-state"><span class="large-symbol" aria-hidden="true">◎</span><h2>Make the loop visible.</h2><p>Evaluate 12 development cases and 3 withheld variants. Inspect the failure, policy patch, and fresh confirmation in the rerun.</p></div>
+      <div id="eval-results" hidden>
+        <p class="evidence-label" id="evidence-label"></p>
+        <div class="score-grid"><article class="score-card"><p>BASELINE</p><strong id="before-score">—</strong><span id="before-pass"></span></article><article class="score-card improved"><p>CANDIDATE</p><strong id="after-score">—</strong><span id="after-pass"></span></article><article class="score-card"><p>PROMOTION GATE</p><strong id="promotion-state" class="promotion-text">—</strong><span id="regression-count"></span></article></div>
+        <div class="patch-panel"><div><p class="eyebrow">STRUCTURED REINFORCEMENT</p><h2>Refresh. Offer again. Reconfirm.</h2><p>Policy adaptation from observed tool failure. Booking safety rules stay fixed.</p></div><pre id="patch-code" tabindex="0" aria-label="Generated policy patch"></pre></div>
+        <div class="results-panel"><div class="panel-heading"><strong>Scenario evidence</strong><small>Scores include database and consent checks</small></div><div class="table-scroll"><table><thead><tr><th scope="col">Scenario</th><th scope="col">Set</th><th scope="col">Before</th><th scope="col">After</th><th scope="col">Evidence</th></tr></thead><tbody id="scenario-rows"></tbody></table></div></div>
+        <div id="evidence-detail" class="evidence-detail" hidden></div>
+      </div>
+    </section>
+    <footer>SlotWise · Synthetic scheduling demo <span>Tool outcomes are checked. Consent is required.</span></footer>
+  </main>
+</body>
+</html>
