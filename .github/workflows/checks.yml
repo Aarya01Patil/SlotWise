@@ -1,0 +1,17 @@
+name: checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.6"
+      - run: uv sync --frozen --python 3.13
+      - run: uv run pytest -q
+      - run: uv run ruff check slotwise tests scripts
+      - run: uv run pip-audit --skip-editable
+      - run: uv run slotwise eval-loop --mode offline --repeats 2

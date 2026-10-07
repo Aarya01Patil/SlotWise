@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: slotwise
+    runtime: docker
+    plan: free
+    region: singapore
+    healthCheckPath: /healthz
+    autoDeployTrigger: commit
+    envVars:
+      - key: LLM_PROVIDER
+        value: groq
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-20b
+      - key: GROQ_API_KEY
+        sync: false
+      - key: SLOTWISE_MODE
+        value: live
+      - key: SLOTWISE_PUBLIC
+        value: "1"
+      - key: SLOTWISE_OPERATOR_TOKEN
+        generateValue: true
+      - key: SLOTWISE_EVAL_INTERVAL
+        value: "12"
