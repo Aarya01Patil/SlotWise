@@ -1,0 +1,12 @@
+.venv/
+.env
+.env.*
+!.env.example
+.slotwise/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.pyc
+*.sqlite*
+dist/
+
