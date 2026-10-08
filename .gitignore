@@ -9,4 +9,7 @@ __pycache__/
 *.pyc
 *.sqlite*
 dist/
-
+examples/diagnosed-*.json
+examples/groq-booking.json
+examples/live-status.json
+examples/screenshots/chat-*.png

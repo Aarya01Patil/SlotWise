@@ -15,7 +15,7 @@ The public demo limits chat to 60 requests/day per process, 20/hour per address,
 
 ## API route
 
-For authorized automated publishing, save `RENDER_API_KEY` in the local ignored `.env`, not in the Render app's environment. The deploy script reads it without printing credentials. Account access is required; a deploy file alone does not mean a service was published.
+For authorized automated publishing, save `RENDER_API_KEY` in the local ignored `.env`, not in the Render app's environment. Run `uv run python scripts/deploy_render.py`. The deploy script reads it without printing credentials. Account access is required; a deploy file alone does not mean a service was published.
 
 ## Verification and limits
 
