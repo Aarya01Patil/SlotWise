@@ -1,0 +1,15 @@
+{
+  "service_id": "srv-db3tsf6b7d7c739k53j0",
+  "deploy_id": "dep-db3tsfmb7d7c739k54t0",
+  "url": "https://slotwise-szrx.onrender.com",
+  "plan": "free",
+  "status": "live",
+  "commit": "7e232eee70e791c9323f51aa7835b191f0d4b1e9",
+  "verified_at": "2026-10-08T18:22:06.909562+00:00",
+  "verification_source": "Render dashboard and actual browser conversation",
+  "render_health_check_passed": true,
+  "live_groq_search_verified": true,
+  "exact_confirmation_verified": true,
+  "live_booking_verified": true,
+  "booking_reference": "SW-AEBD8340F7"
+}

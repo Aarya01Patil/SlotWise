@@ -1,5 +1,7 @@
 # Render free deployment
 
+**Published demo:** [SlotWise](https://slotwise-szrx.onrender.com). Docker build, Render health checks, live Groq search, exact confirmation, and a synthetic booking were verified. [Deployment evidence](examples/deployment.json).
+
 This deploys a synthetic demonstration, not a real clinic service. Render's free web services sleep after 15 minutes idle and have ephemeral filesystems. SQLite bookings, sessions, and promoted runtime policies reset after a restart. Captured reports under `examples/` remain readable and are labeled saved evidence. See [Render free services](https://render.com/docs/free).
 
 ## Dashboard route
@@ -23,5 +25,5 @@ For authorized automated publishing, save `RENDER_API_KEY` in the local ignored 
 - Host and origin checks reject unexpected sites; HTTPS cookies are Secure and HttpOnly.
 - A visitor cannot start evaluation without the operator token; no external staff notifications exist.
 - Keep one instance: SQLite and session locks are process-local.
-- Docker is not installed in the current Windows workspace; the image must be built on Render or a Docker-equipped machine. Dependency lock, wheel build, local server, and public-mode HTTP checks were verified locally.
+- Docker is not installed in the current Windows workspace; the actual Docker image was built successfully on Render. Dependency lock, wheel build, local server, and public-mode HTTP checks were also verified locally.
 - To restart locally: `uv run slotwise serve --port 8002`. Public settings stay off locally by default.

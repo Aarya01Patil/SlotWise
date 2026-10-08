@@ -2,6 +2,8 @@
 
 **Repository URL:** https://github.com/Aarya01Patil/SlotWise — README includes agent and evaluation commands.
 
+**Live demo:** https://slotwise-szrx.onrender.com
+
 **Recording URL:** Pending an actual recording. Do not submit a placeholder as a recorded demo; see DEMO.md.
 
 **Design note:** https://github.com/Aarya01Patil/SlotWise/blob/main/DESIGN.md

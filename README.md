@@ -2,7 +2,7 @@
 
 A patient appointment agent that learns a bounded recovery policy from failed runs, then proves the change against the same scenarios.
 
-[Repository](https://github.com/Aarya01Patil/SlotWise) · [Design note](DESIGN.md) · [Recording guide](DEMO.md) · [Free Render deployment](DEPLOY.md)
+[Live demo](https://slotwise-szrx.onrender.com) · [Repository](https://github.com/Aarya01Patil/SlotWise) · [Design note](DESIGN.md) · [Recording guide](DEMO.md) · [Free Render deployment](DEPLOY.md)
 
 ![Evaluation lab](examples/screenshots/eval-desktop.png)
 
