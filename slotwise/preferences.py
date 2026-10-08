@@ -24,6 +24,7 @@ UNAVAILABLE_SPECIALTIES = {
     "cardiology",
     "neurology",
 }
+DATE_PATTERN = r"\d{4}-\d{2}-\d{2}|\d{4}/\d{1,2}/\d{1,2}|\d{1,2}/\d{1,2}/\d{4}"
 
 
 def safe_fragment(text: str) -> bool:
@@ -41,7 +42,7 @@ def safe_fragment(text: str) -> bool:
         "first",
         "first one",
         "the first available appointment, please",
-    } or bool(re.fullmatch(r"\d{4}-\d{2}-\d{2}|\d{1,2}/\d{1,2}/\d{4}", text))
+    } or bool(re.fullmatch(DATE_PATTERN, text))
 
 
 def has_scheduling_content(text: str) -> bool:
@@ -51,7 +52,7 @@ def has_scheduling_content(text: str) -> bool:
         return True
     if UNAVAILABLE.search(text):
         return True
-    if re.search(r"\b(\d{4}-\d{2}-\d{2}|\d{1,2}/\d{1,2}/\d{4})\b", text):
+    if re.search(rf"\b(?:{DATE_PATTERN})\b", text):
         return True
     return bool(re.search(r"\b(tomorrow|morning|afternoon|evening|appointment|visit)\b", text))
 
@@ -72,13 +73,17 @@ def collect(session, text: str) -> str | None:
     elif unavailable := UNAVAILABLE.search(text):
         prefs.pop("specialty", None)
         issues["specialty"] = unavailable.group()
-    match = re.search(r"\b(\d{4}-\d{2}-\d{2}|\d{1,2}/\d{1,2}/\d{4})\b", text)
+    match = re.search(rf"\b(?:{DATE_PATTERN})\b", text)
     target = None
     if match:
         raw = match.group()
         try:
             if "/" in raw:
-                day, month, year = map(int, raw.split("/"))
+                parts = raw.split("/")
+                if len(parts[0]) == 4:
+                    year, month, day = map(int, parts)
+                else:
+                    day, month, year = map(int, parts)
                 target = date(year, month, day)
             else:
                 target = date.fromisoformat(raw)

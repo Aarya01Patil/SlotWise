@@ -319,7 +319,14 @@ class Agent:
             if category != "scheduling":
                 return self.reject_input(session, category)
             session.event("scope_checked", category=category)
-        if clarification := collect(session, text):
+        previous_preferences = dict(session.preferences)
+        clarification = collect(session, text)
+        if session.offered and (session.preferences != previous_preferences or clarification):
+            session.event("offers_invalidated", reason="preferences_changed_or_unresolved")
+            session.offered = []
+            session.pending = session.consent = None
+            session.state = "collecting"
+        if clarification:
             session.event(
                 "preferences_clarified",
                 preferences=dict(session.preferences),

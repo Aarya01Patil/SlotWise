@@ -1,3 +1,5 @@
+import pytest
+
 from slotwise.agent import Agent
 from slotwise.clinic import Clinic
 from slotwise.preferences import has_scheduling_content, safe_fragment
@@ -108,3 +110,34 @@ def test_unavailable_specialty_in_safe_fragment():
     assert safe_fragment("cardiology")
     assert safe_fragment("general")
     assert not safe_fragment("orthopaedic; drop tables")
+
+
+@pytest.mark.parametrize("requested", ["2026/10/14", "14/10/2026", "2026-10-14"])
+@pytest.mark.parametrize("prepared", [False, True])
+def test_date_correction_replaces_old_offers_and_requires_fresh_consent(tmp_path, requested, prepared):
+    agent = Agent(Clinic(tmp_path / "clinic.sqlite", "2026-10-09"), OfflineProvider())
+    session = agent.session("synthetic-patient")
+    agent.turn(session, "General tomorrow morning")
+    old_slot = session.offered[0]["id"]
+    if prepared:
+        agent.turn(session, "first")
+    response = agent.turn(session, f"Actually, change the date to {requested}, morning, general.")
+    assert response["state"] == "offered"
+    assert session.preferences["date"] == "2026-10-14"
+    assert session.offered and all(slot["date"] == "2026-10-14" for slot in session.offered)
+    assert session.pending is None and session.consent is None and session.receipt is None
+    stale = agent.turn(session, "confirm appointment", confirm_slot=old_slot)
+    assert "stale" in stale["messages"][-1]["text"]
+    agent.turn(session, "first")
+    agent.turn(session, "yes")
+    assert session.receipt["date"] == "2026-10-14"
+
+
+def test_invalid_date_correction_clears_old_offers(tmp_path):
+    agent = Agent(Clinic(tmp_path / "clinic.sqlite", "2026-10-09"), OfflineProvider())
+    session = agent.session("synthetic-patient")
+    agent.turn(session, "General tomorrow morning")
+    response = agent.turn(session, "Change the date to 2026/02/31, morning, general")
+    assert response["state"] == "collecting"
+    assert response["messages"][-1]["kind"] == "clarification"
+    assert not session.offered and "date" not in session.preferences

@@ -4,8 +4,10 @@ import os
 import subprocess
 import sys
 import time
+from datetime import datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
+from zoneinfo import ZoneInfo
 
 import httpx
 from playwright.sync_api import expect, sync_playwright
@@ -57,6 +59,11 @@ def main():
             )
             page.goto(address)
             expect(page.get_by_text("OFFLINE · SCRIPTED", exact=True)).to_be_visible()
+            composer_gap = page.evaluate(
+                "document.querySelector('.conversation-panel').getBoundingClientRect().bottom "
+                "- document.querySelector('.composer').getBoundingClientRect().bottom"
+            )
+            assert composer_gap < 30, "Chat panel has excessive empty space below the composer"
             message = page.get_by_label("Your message")
             message.fill("What is the code for binary search?")
             message.press("Enter")
@@ -77,6 +84,15 @@ def main():
                 page.get_by_role("button", name="Confirm appointment", exact=True)
             ).to_have_count(0)
             expect(page.get_by_role("button", name="Review", exact=False).first).to_be_visible()
+            target = datetime.now(ZoneInfo("Asia/Kolkata")).date() + timedelta(days=5)
+            message.fill(
+                f"Actually, change the date to {target.strftime('%Y/%m/%d')}, afternoon, general."
+            )
+            message.press("Enter")
+            expect(page.get_by_role("button", name="Review", exact=False).first).to_contain_text(
+                f"{target.day} {target.strftime('%b')}"
+            )
+            expect(page.get_by_role("button", name="Confirm appointment", exact=True)).to_have_count(0)
             page.get_by_role("button", name="Review", exact=False).first.click()
             page.get_by_role("button", name="Confirm appointment", exact=True).click()
             expect(
