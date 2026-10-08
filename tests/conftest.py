@@ -10,4 +10,7 @@ def pytest_configure(config):
         target = (root / ".slotwise" / ("tests-" + uuid4().hex)).resolve()
         if not target.is_relative_to(root) or target.exists():
             raise RuntimeError("Test temporary directory must be new and inside the workspace.")
+        # Pytest creates basetemp itself, but does not create missing parents.
+        # Ignored runtime folders are absent in CI and other fresh checkouts.
+        target.parent.mkdir(parents=True, exist_ok=True)
         config.option.basetemp = str(target)
