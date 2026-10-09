@@ -15,6 +15,11 @@ def main():
     )
     serve.add_argument("--port", type=int, default=8000)
     serve.add_argument("--host", default="127.0.0.1")
+    serve.add_argument(
+        "--fresh-demo",
+        action="store_true",
+        help="Local recording mode: separate synthetic clinic per new conversation",
+    )
     loop = commands.add_parser(
         "eval-loop", help="Baseline → failure → policy patch → candidate → gate"
     )
@@ -29,7 +34,12 @@ def main():
         print(
             f"SlotWise: http://127.0.0.1:{args.port} · {args.mode.upper()} · synthetic patients only"
         )
-        uvicorn.run(create_app(mode=args.mode), host=args.host, port=args.port, log_level="warning")
+        uvicorn.run(
+            create_app(mode=args.mode, fresh_demo=args.fresh_demo),
+            host=args.host,
+            port=args.port,
+            log_level="warning",
+        )
     else:
         from slotwise.evaluation import run_loop
 

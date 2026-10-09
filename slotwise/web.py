@@ -36,11 +36,13 @@ class EvalRequest(BaseModel):
     repeats: int = Field(default=1, ge=1, le=3)
 
 
-def create_app(root: Path | None = None, mode: str = "live"):
+def create_app(root: Path | None = None, mode: str = "live", fresh_demo: bool = False):
     if mode not in {"live", "offline"}:
         raise ValueError("Mode must be live or offline.")
     root = Path(root or ".slotwise")
     hosting = Hosting.from_env()
+    if fresh_demo and hosting.public:
+        raise ValueError("Fresh demo mode is local only; public demos use a shared clinic.")
     budget = DemoBudget()
     realm = root / mode
     today = datetime.now(ZoneInfo("Asia/Kolkata")).date().isoformat()
@@ -61,7 +63,7 @@ def create_app(root: Path | None = None, mode: str = "live"):
         TrustedHostMiddleware,
         allowed_hosts=["localhost", "127.0.0.1"] + ([hosting.hostname] if hosting.public else []),
     )
-    sessions: dict[str, tuple[Session, threading.Lock, float]] = {}
+    sessions: dict[str, tuple[Session, threading.Lock, float, Clinic]] = {}
     registry_lock = threading.Lock()
     eval_lock = threading.Lock()
     job = {"status": "idle", "progress": "No evaluation running", "error": None}
@@ -115,6 +117,7 @@ def create_app(root: Path | None = None, mode: str = "live"):
     def config():
         return {
             "mode": mode,
+            "fresh_demo": fresh_demo,
             "public_demo": hosting.public,
             "eval_requires_token": hosting.public,
             "eval_enabled": not hosting.public or bool(hosting.operator_token),
@@ -155,7 +158,12 @@ def create_app(root: Path | None = None, mode: str = "live"):
                     "would you prefer? Please use synthetic details only.",
                 }
             )
-            sessions[session.id] = (session, threading.Lock(), time.monotonic())
+            session_clinic = (
+                Clinic(realm / "recording-sessions" / f"{session.id}.sqlite", today)
+                if fresh_demo
+                else clinic
+            )
+            sessions[session.id] = (session, threading.Lock(), time.monotonic(), session_clinic)
         response.set_cookie(
             "slotwise_session",
             session.id,
@@ -178,7 +186,7 @@ def create_app(root: Path | None = None, mode: str = "live"):
             raise HTTPException(
                 503, f"API key missing. Add {live_settings()['key_name']} to .env and restart."
             )
-        session, lock, _ = entry
+        session, lock, _, session_clinic = entry
         if not lock.acquire(blocking=False):
             raise HTTPException(409, "A reply is already in progress. Please wait.")
         try:
@@ -186,7 +194,7 @@ def create_app(root: Path | None = None, mode: str = "live"):
                 with provider_lock:
                     if not provider_holder:
                         provider_holder.append(provider_for(mode))
-                agent = Agent(clinic, provider_holder[0], session.policy)
+                agent = Agent(session_clinic, provider_holder[0], session.policy)
                 return agent.turn(session, body.text, body.confirm_slot, body.select_slot)
             except ValueError as error:
                 # Do not expose SDK, credential, or database exception contents.

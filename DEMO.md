@@ -15,7 +15,7 @@ A successful live improvement without regressions has **not** been demonstrated.
 
 1. Fix and investigate the live changed-preference failure. Preserve the rejected report and keep the scenario assertions and safety gate intact.
 2. With the local Groq key configured, run `uv run slotwise eval-loop --mode live --repeats 1`. Inspect the actual paired report. Proceed with a successful-live-loop recording only if promotion is accepted, the target passes, and there are zero regressions. One repetition closes a demonstration loop; it is not statistical validation. Use two repetitions when quota allows.
-3. Open the local live app at `http://127.0.0.1:8002/` (start with `uv run slotwise serve --mode live --port 8002` if needed). The public app at `https://slotwise-szrx.onrender.com` also supports conversations; public eval runs need an operator token. Enter any token **before** recording.
+3. Open the local live app at `http://127.0.0.1:8002/` (start with `uv run slotwise serve --mode live --port 8002 --fresh-demo` if needed). The public app at `https://slotwise-szrx.onrender.com` also supports conversations; public eval runs need an operator token. Enter any token **before** recording.
 4. Record one browser window with Loom or another recorder. Keep `.env`, provider dashboards, Render Environment settings, and tokens off screen. Record a real run; if API waits are cut, label the cut as a shortened wait.
 5. Follow the four-minute script below. Do not substitute a stored report for a new run without saying it is saved evidence.
 6. Upload the actual recording, test its link in a signed-out/private window, and put the URL in `SUBMISSION.md` and the README.
@@ -68,7 +68,7 @@ Read the actual score shown; do not memorize or invent a successful live number.
 Until a live candidate passes, record the live conversation above, then explicitly switch to a local offline app:
 
 ```sh
-uv run slotwise serve --mode offline --port 8003
+uv run slotwise serve --mode offline --port 8003 --fresh-demo
 ```
 
 Open `http://127.0.0.1:8003/`, show the OFFLINE SCRIPTED badge, and run the loop in its Evaluation lab with two repetitions. Say:

@@ -3,6 +3,38 @@ from fastapi.testclient import TestClient
 from slotwise.web import create_app
 
 
+def test_fresh_demo_conversations_do_not_exhaust_each_others_slots(tmp_path):
+    with TestClient(
+        create_app(tmp_path, mode="offline", fresh_demo=True), base_url="http://localhost"
+    ) as client:
+        for _ in range(3):
+            client.post("/api/session")
+            offer = client.post("/api/message", json={"text": "General tomorrow morning"}).json()
+            assert offer["state"] == "offered" and len(offer["offered"]) == 2
+            slot_id = offer["offered"][0]["id"]
+            client.post("/api/message", json={"text": "Choose appointment", "select_slot": slot_id})
+            booked = client.post("/api/message", json={"text": "yes"}).json()
+            assert booked["receipt"]["slot_id"] == slot_id
+            duplicate = client.post("/api/message", json={"text": "yes"}).json()
+            assert duplicate["receipt"]["id"] == booked["receipt"]["id"]
+        assert client.get("/api/config").json()["fresh_demo"] is True
+
+
+def test_default_clinic_preserves_shared_slot_ownership(tmp_path):
+    with TestClient(create_app(tmp_path, mode="offline"), base_url="http://localhost") as client:
+        for _ in range(2):
+            client.post("/api/session")
+            offer = client.post("/api/message", json={"text": "General tomorrow morning"}).json()
+            client.post(
+                "/api/message",
+                json={"text": "Choose appointment", "select_slot": offer["offered"][0]["id"]},
+            )
+            client.post("/api/message", json={"text": "yes"})
+        client.post("/api/session")
+        empty = client.post("/api/message", json={"text": "General tomorrow morning"}).json()
+        assert empty["state"] == "handoff" and empty["receipt"] is None
+
+
 def test_browser_booking_and_second_session_isolation(tmp_path):
     app = create_app(tmp_path, mode="offline")
     with TestClient(app, base_url="http://localhost") as patient:

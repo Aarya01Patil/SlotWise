@@ -195,6 +195,8 @@ $('run-eval').addEventListener('click', async () => {
       'Offline scripted demo. This exercises scheduling and eval mechanics; it does not measure LLM quality.' :
       config.ready ? `Live ${config.provider_label} · ${config.model} · synthetic patients only. Scheduling demo; no real clinic or staff connection.` :
       `${config.provider_label} key missing. Add ${config.key_name} to .env and restart. Live chat and evals are unavailable until configured.`;
+    if (config.fresh_demo) $('mode-notice').textContent +=
+      ' Recording mode: each new conversation has a separate clinic with fresh synthetic slots.';
     $('mode-notice').classList.toggle('warning', !config.ready || config.mode === 'offline');
     $('clinic-date').textContent = 'Clinic date: ' + config.today;
     await newChat(); setBusy(false);

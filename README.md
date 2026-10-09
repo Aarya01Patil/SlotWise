@@ -43,6 +43,11 @@ uv run slotwise eval-loop --mode offline --repeats 2
 
 Offline mode is a **scripted test double**, not an LLM and not evidence of Gemini quality. Missing or invalid credentials never silently select it. Live and offline evidence/policies are isolated under `.slotwise/live/` and `.slotwise/offline/`.
 
+For repeated local recording takes, run `uv run slotwise serve --mode live --port 8002 --fresh-demo`.
+Each **New conversation** gets a separate synthetic clinic with fresh slots, clearly labelled in the interface.
+Existing bookings and evaluation evidence are preserved. Normal mode retains shared slot ownership;
+recording mode is unavailable on public hosting and does not change the evaluation suite.
+
 ## Architecture
 
 ```mermaid

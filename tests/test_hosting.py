@@ -5,6 +5,14 @@ from slotwise.hosting import DemoBudget, Hosting
 from slotwise.web import create_app
 
 
+def test_fresh_recording_mode_is_not_available_on_public_host(tmp_path, monkeypatch):
+    monkeypatch.setenv("SLOTWISE_PUBLIC", "1")
+    monkeypatch.setenv("SLOTWISE_HOSTNAME", "slotwise.example.com")
+    monkeypatch.delenv("RENDER_EXTERNAL_HOSTNAME", raising=False)
+    with pytest.raises(ValueError, match="local only"):
+        create_app(tmp_path, "offline", fresh_demo=True)
+
+
 def test_public_demo_requires_exact_host_and_long_operator_secret(monkeypatch):
     monkeypatch.setenv("SLOTWISE_PUBLIC", "1")
     monkeypatch.delenv("RENDER_EXTERNAL_HOSTNAME", raising=False)
