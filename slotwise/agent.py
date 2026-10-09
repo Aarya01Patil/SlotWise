@@ -358,6 +358,26 @@ class Agent:
                 text, allowed = render_reply(decision.text)
                 if not allowed:
                     session.event("reply_blocked", code="REPLY_NOT_ALLOWLISTED")
+                if (
+                    session.state == "collecting"
+                    and not session.offered
+                    and not session.preference_issues
+                    and all(key in session.preferences for key in ("specialty", "date", "period"))
+                    and (
+                        not allowed
+                        or decision.text.strip() in {
+                            "ASK_DETAILS", "ASK_SPECIALTY", "ASK_DATE", "ASK_PERIOD", "ASK_SLOT"
+                        }
+                    )
+                ):
+                    # A reply token cannot restart a completed collection step.
+                    # Search is read-only and still passes the normal preference gates.
+                    session.event("reply_state_corrected", action="search_saved_preferences")
+                    result = self.dispatch(session, "search_slots", dict(session.preferences))
+                    if result.get("ok"):
+                        return self.state_reply(session)
+                    self.handoff(session, "tool_error")
+                    return self.state_reply(session)
                 return self.reply(session, text)
             if len(decision.calls) > 5:
                 self.handoff(session, "step_limit")

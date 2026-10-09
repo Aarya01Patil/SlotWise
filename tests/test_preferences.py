@@ -141,3 +141,25 @@ def test_invalid_date_correction_clears_old_offers(tmp_path):
     assert response["state"] == "collecting"
     assert response["messages"][-1]["kind"] == "clarification"
     assert not session.offered and "date" not in session.preferences
+
+
+@pytest.mark.parametrize("token", ["ASK_DETAILS", "ASK_DATE", "ASK_SPECIALTY", "ASK_PERIOD", "ASK_SLOT"])
+def test_complete_multiturn_preferences_cannot_restart_collection(tmp_path, token):
+    class RepeatingProvider(OfflineProvider):
+        def respond(self, session, results):
+            return Decision(text=token)
+
+    agent = Agent(Clinic(tmp_path / "clinic.sqlite", "2026-10-09"), RepeatingProvider())
+    session = agent.session("synthetic-patient")
+    for message in ["I need an appointment", "general", "Tomorrow", "Morning"]:
+        response = agent.turn(session, message)
+    assert response["state"] == "offered"
+    assert session.preferences == {
+        "specialty": "general", "date": "2026-10-10", "period": "morning"
+    }
+    assert session.offered and session.pending is None and session.receipt is None
+    assert any(e["kind"] == "reply_state_corrected" for e in session.events)
+    agent.turn(session, "first")
+    assert session.pending is not None and session.receipt is None
+    agent.turn(session, "yes")
+    assert session.receipt["date"] == "2026-10-10"
