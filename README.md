@@ -2,7 +2,7 @@
 
 A patient appointment agent that learns a bounded recovery policy from failed runs, then proves the change against the same scenarios.
 
-[Live demo](https://slotwise-szrx.onrender.com) · [Repository](https://github.com/Aarya01Patil/SlotWise) · [Design note](DESIGN.md) · [Recording guide](DEMO.md) · [Free Render deployment](DEPLOY.md)
+[Live demo](https://slotwise-szrx.onrender.com) · [Repository](https://github.com/Aarya01Patil/SlotWise) · [Design note](DESIGN.md) · [Free Render deployment](DEPLOY.md)
 
 ![Evaluation lab](examples/screenshots/eval-desktop.png)
 
@@ -43,7 +43,7 @@ uv run slotwise eval-loop --mode offline --repeats 2
 
 Offline mode is a **scripted test double**, not an LLM and not evidence of Gemini quality. Missing or invalid credentials never silently select it. Live and offline evidence/policies are isolated under `.slotwise/live/` and `.slotwise/offline/`.
 
-For repeated local recording takes, run `uv run slotwise serve --mode live --port 8002 --fresh-demo`.
+For isolated local testing, run `uv run slotwise serve --mode live --port 8002 --fresh-demo`.
 Each **New conversation** gets a separate synthetic clinic with fresh slots, clearly labelled in the interface.
 Existing bookings and evaluation evidence are preserved. Normal mode retains shared slot ownership;
 recording mode is unavailable on public hosting and does not change the evaluation suite.
@@ -119,7 +119,7 @@ Live provider failures are recorded separately from task failures. An evaluation
 
 **Limits:** synthetic identities stand in for verified clinic authentication. Emergency phrase matching and scope classification can miss meaning or produce false positives, especially with obfuscation or other languages. The runtime is not clinical triage. Fixed assistant replies intentionally trade expressiveness for a constrained output boundary. Preference collection recognizes explicit specialty aliases, tomorrow, exact dates, and supported periods. Other expressions receive clarification. The model cannot search with missing constraints or change collected constraints. This deliberately limits natural-language flexibility. No transcript-only judge can prove a booking committed or consent was valid; database checks cannot fully measure empathy, semantic preferences, or clinical suitability. The semantic scope check adds one API request per nontrivial chat turn; exact scheduling fragments bypass that fallible classifier after local safety checks and can fail closed during provider outages. Two live repetitions do not establish statistical significance or production readiness.
 
-## Checks and recording
+## Verification
 
 ```sh
 uv run pytest -q
@@ -138,7 +138,7 @@ It checks keyboard chat, booking confirmation, eval evidence, mobile overflow, r
 
 To check real LLM guardrails and a full booking with a preference correction, start a live server on port 8002, then run `uv run python scripts/live_smoke.py`. This uses your API quota and saves a separate browser report under `.slotwise/live/browser-smoke.json`. It distinguishes genuine scope refusals from provider failures.
 
-Read the [one-page design note](DESIGN.md), [recording walkthrough](DEMO.md), and [submission answers](SUBMISSION.md). AI assistance and actual human direction are documented explicitly. Feature commits are grouped from the completed implementation; dates and development history are not fabricated.
+Read the [one-page design note](DESIGN.md) and [submission answers](SUBMISSION.md). AI assistance and actual human direction are documented explicitly. Feature commits are grouped from the completed implementation; dates and development history are not fabricated.
 
 ## Troubleshooting
 
