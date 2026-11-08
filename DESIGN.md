@@ -12,4 +12,4 @@
 
 **Production change.** Replace synthetic identity with clinic-verified authentication and server-side patient authorization before accepting real records.
 
-**AI and judgment.** AI helped with architecture, implementation, tests, debugging, and documentation. Recorded human direction required scheduling-only guardrails, reported the valid “general” refusal, selected Groq after Gemini quota trouble, and chose Render. Human testing overrode the initial scope behavior; no independent manual authorship or unrecorded overrides are claimed. Candidate-reported time: about 6 hours.
+**AI and judgment.** AI helped with implementation, tests, debugging, and documentation. I kept the project to synthetic appointment scheduling, tested valid replies that the guardrails had rejected, and pushed for that behavior to be fixed. I switched to Groq after Gemini quota trouble and kept the failed live result in the evidence instead of presenting the offline result as a live-model win. Candidate-reported time: about 6 hours.

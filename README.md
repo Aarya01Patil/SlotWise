@@ -103,6 +103,8 @@ Any critical safety violation scores zero and blocks promotion. Scenario pass re
 
 Reports in `.slotwise/<mode>/runs/<run-id>/` preserve before/after results, per-case transcripts/events/SQLite databases, patch, candidate policy, hashes, and promotion decision. `.slotwise/<mode>/latest.json` powers the browser evidence view. `active_policy.json` changes only after acceptance. Exit code 0 means promotion, 1 means rejected/no supported repair, 2 means configuration error.
 
+Live provider failures are recorded separately from task failures. An evaluation stops when a provider error occurs, labels the run inconclusive, skips the candidate rerun, and never generates or promotes a patch from incomplete evidence.
+
 ## Design and safety boundaries
 
 - The LLM proposes five tools: `search_slots`, `prepare_booking`, `commit_booking`, `check_booking_status`, `request_handoff`. Strict schemas reject additional fields. Patient identity and idempotency keys come from runtime state, never model arguments.

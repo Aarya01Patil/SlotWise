@@ -110,7 +110,11 @@ function view(name) {
   if (name === 'eval') refreshEval();
 }
 
-function resultLabel(result) { return `${result.score} · ${result.passed ? 'Pass' : 'Fail'}`; }
+function resultLabel(result) {
+  if (result.inconclusive) return 'Inconclusive · provider error';
+  if (result.score === null) return 'Not run';
+  return `${result.score} · ${result.passed ? 'Pass' : 'Fail'}`;
+}
 
 function showEvidence(before, after) {
   const panel = $('evidence-detail'); panel.hidden = false; panel.replaceChildren();
@@ -139,11 +143,19 @@ function showEvidence(before, after) {
 function renderReport(report) {
   $('eval-empty').hidden = true; $('eval-results').hidden = false;
   $('evidence-label').textContent = report.evidence_notice + ' · ' + report.repeats + ' repetition(s) · ' + report.run_id;
-  $('before-score').textContent = report.before.score + '/100'; $('after-score').textContent = report.after.score + '/100';
-  $('before-pass').textContent = `${report.before.passed}/${report.before.total} scenarios passed`;
-  $('after-pass').textContent = `${report.after.passed}/${report.after.total} scenarios passed`;
-  $('promotion-state').textContent = report.promotion.accepted ? 'Promoted' : 'Rejected';
-  $('regression-count').textContent = `${report.promotion.regressions.length} regressions · ${report.promotion.safety_ok ? 'safety checks passed' : 'safety gate failed'}`;
+  if (report.evaluation_status === 'inconclusive') {
+    $('evidence-label').textContent += ' · INCONCLUSIVE — provider error; no policy promotion';
+  }
+  const scoreText = suite => suite.score === null ? '—' : `${suite.score}/100${suite.complete === false ? ' · partial' : ''}`;
+  const passText = suite => `${suite.passed}/${suite.total} scenarios passed · ${suite.attempted ?? suite.total}/${suite.total} attempted`;
+  $('before-score').textContent = scoreText(report.before); $('after-score').textContent = scoreText(report.after);
+  $('before-pass').textContent = passText(report.before);
+  $('after-pass').textContent = passText(report.after);
+  $('promotion-state').textContent = report.evaluation_status === 'inconclusive'
+    ? 'Inconclusive' : report.promotion.accepted ? 'Promoted' : 'Rejected';
+  $('regression-count').textContent = report.evaluation_status === 'inconclusive'
+    ? `${report.before.infrastructure_errors} provider error(s) · policy unchanged`
+    : `${report.promotion.regressions.length} regressions · ${report.promotion.safety_ok ? 'safety checks passed' : 'safety gate failed'}`;
   $('patch-code').textContent = JSON.stringify(report.patch, null, 2);
   $('scenario-rows').replaceChildren();
   for (const before of report.before.results) {
@@ -155,6 +167,13 @@ function renderReport(report) {
     const cell = node('td'), button = node('button', 'Inspect', 'evidence-button');
     button.setAttribute('aria-label', 'Inspect ' + before.title + ', run ' + (before.repeat + 1));
     button.addEventListener('click', () => showEvidence(before, after)); cell.append(button); row.append(cell);
+    $('scenario-rows').append(row);
+  }
+  if (report.before.attempted < report.before.total) {
+    const row = node('tr');
+    row.append(node('td', 'Remaining scenarios'), node('td', 'Coverage'),
+      node('td', `${report.before.total - report.before.attempted} not run`),
+      node('td', 'No candidate run'), node('td', 'Stopped after provider error'));
     $('scenario-rows').append(row);
   }
 }

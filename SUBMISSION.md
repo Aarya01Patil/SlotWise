@@ -4,7 +4,7 @@
 
 **Live demo:** https://slotwise-szrx.onrender.com
 
-**Recording URL:** Pending an actual recording. Do not submit a placeholder as a recorded demo; see DEMO.md.
+**Recording URL:** The demo has been recorded locally as `SlotWise_demo.mp4`; the shareable URL is pending upload. The local file path is not accessible to reviewers. See DEMO.md for the concise narration, pickup notes, and upload checklist.
 
 **Design note:** https://github.com/Aarya01Patil/SlotWise/blob/main/DESIGN.md
 

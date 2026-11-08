@@ -76,13 +76,17 @@ def evaluate_scenario(scenario, policy, provider, folder, repeat):
     first_events = list(session.events)
     corrected = False
     protected = scenario["outcome"] == "protected"
+
+    def provider_failed():
+        return any(event["kind"] == "provider_error" for event in session.events)
+
     if protected:
         for text in scenario.get("followups", []):
-            if session.state not in {"booked", "handoff"}:
+            if session.state not in {"booked", "handoff"} and not provider_failed():
                 agent.turn(session, format_message(text))
     else:
         for _ in range(7):
-            if session.state in {"booked", "handoff"}:
+            if session.state in {"booked", "handoff"} or provider_failed():
                 break
             if session.pending:
                 if scenario.get("urgent"):
@@ -217,8 +221,17 @@ def evaluate_scenario(scenario, policy, provider, folder, repeat):
     )
     if safety_violations:
         score = 0
+    provider_errors = [e for e in events if e["kind"] == "provider_error"]
+    inconclusive = bool(provider_errors) and not safety_violations
+    if inconclusive:
+        # Provider availability is infrastructure evidence, not an appointment-task score.
+        score = None
     failure_code = None
-    if (
+    if safety_violations:
+        failure_code = "SAFETY_FAILURE"
+    elif provider_errors:
+        failure_code = "PROVIDER_UNAVAILABLE"
+    elif (
         not outcome_ok
         and session.handoff_reason == "slot_conflict"
         and clinic.search(
@@ -236,7 +249,12 @@ def evaluate_scenario(scenario, policy, provider, folder, repeat):
         "split": scenario["split"],
         "repeat": repeat,
         "score": score,
-        "passed": all(checks.values()),
+        "passed": all(checks.values()) and not provider_errors,
+        "inconclusive": inconclusive,
+        "provider_errors": [
+            {"seq": e["seq"], "code": e.get("code"), "stage": e.get("stage")}
+            for e in provider_errors
+        ],
         "checks": checks,
         "safety_violations": safety_violations,
         "failure_code": failure_code,
@@ -256,6 +274,7 @@ def evaluate_scenario(scenario, policy, provider, folder, repeat):
 def run_suite(policy, provider, folder, repeats=1, progress=None):
     scenarios = json.loads(SCENARIOS_FILE.read_text(encoding="utf-8"))
     results = []
+    stop_after_provider_error = False
     for repeat in range(repeats):
         for scenario in scenarios:
             if progress:
@@ -265,10 +284,23 @@ def run_suite(policy, provider, folder, repeats=1, progress=None):
             case_folder = folder / f"{scenario['id']}-{repeat}"
             result = evaluate_scenario(scenario, policy, provider, case_folder, repeat)
             results.append(result)
+            if result["provider_errors"]:
+                stop_after_provider_error = True
+                break
+        if stop_after_provider_error:
+            break
+    scored = [r["score"] for r in results if r["score"] is not None]
+    expected = len(scenarios) * repeats
+    infrastructure_errors = sum(len(r["provider_errors"]) for r in results)
+    complete = len(results) == expected and infrastructure_errors == 0
     return {
-        "score": round(sum(r["score"] for r in results) / len(results), 2),
+        "score": round(sum(scored) / len(scored), 2) if scored else None,
         "passed": sum(r["passed"] for r in results),
-        "total": len(results),
+        "total": expected,
+        "attempted": len(results),
+        "scored": len(scored),
+        "infrastructure_errors": infrastructure_errors,
+        "complete": complete,
         "results": results,
         "policy": policy.model_dump(),
         "rubric": RUBRIC,
@@ -348,8 +380,10 @@ def promotion_decision(before, after):
     target_fixed = bool(targeted) and all(candidate.get(key, {}).get("passed") for key in targeted)
     safety_ok = all(not r["safety_violations"] for r in after["results"])
     same_suite = prior.keys() == candidate.keys()
+    complete = before.get("complete", True) and after.get("complete", True)
     accepted = bool(
-        same_suite
+        complete
+        and same_suite
         and after["score"] > before["score"]
         and not regressions
         and safety_ok
@@ -361,9 +395,13 @@ def promotion_decision(before, after):
         "target_fixed": target_fixed,
         "safety_ok": safety_ok,
         "same_suite": same_suite,
-        "reason": "Improved score; targeted failure fixed; no regressions."
-        if accepted
-        else "Candidate rejected: improvement, target, safety, or regression gate failed.",
+        "reason": (
+            "Improved score; targeted failure fixed; no regressions."
+            if accepted
+            else "Evaluation incomplete due to provider or scenario errors; no policy was promoted."
+            if not complete
+            else "Candidate rejected: improvement, target, safety, or regression gate failed."
+        ),
     }
 
 
@@ -400,7 +438,7 @@ def _run_loop(root, mode, repeats, progress, provider):
         progress("Evaluating baseline")
     before = run_suite(BASELINE, provider, folder / "before", repeats, progress)
     save_json(folder / "before.json", before)
-    patch = propose_patch(BASELINE, before["results"])
+    patch = None if not before["complete"] else propose_patch(BASELINE, before["results"])
     candidate = apply_patch(BASELINE, patch) if patch else BASELINE
     save_json(folder / "patch.json", patch)
     save_json(folder / "candidate_policy.json", candidate.model_dump())
@@ -410,7 +448,11 @@ def _run_loop(root, mode, repeats, progress, provider):
             if patch
             else "No supported patch; verifying baseline"
         )
-    after = run_suite(candidate, provider, folder / "after", repeats, progress)
+    if before["complete"]:
+        after = run_suite(candidate, provider, folder / "after", repeats, progress)
+    else:
+        # Do not spend more provider calls or train a policy from a partial baseline.
+        after = before
     save_json(folder / "after.json", after)
     decision = promotion_decision(before, after)
     unchanged = (
@@ -426,7 +468,8 @@ def _run_loop(root, mode, repeats, progress, provider):
         )
     if not patch:
         decision["accepted"] = False
-        decision["reason"] = "No supported evidence-driven patch was generated."
+        if before["complete"]:
+            decision["reason"] = "No supported evidence-driven patch was generated."
     if decision["accepted"]:
         active = root / "active_policy.json"
         if active.exists():
@@ -444,6 +487,7 @@ def _run_loop(root, mode, repeats, progress, provider):
         "evidence_notice": "Live " + getattr(provider, "label", provider.name) + " runs"
         if mode == "live"
         else "OFFLINE SCRIPTED TEST DOUBLE: validates harness mechanics, not LLM quality.",
+        "evaluation_status": "complete" if before["complete"] and after["complete"] else "inconclusive",
         "before": before,
         "after": after,
         "patch": patch,

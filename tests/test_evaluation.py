@@ -196,3 +196,48 @@ def test_configuration_change_blocks_promotion(tmp_path, monkeypatch):
     assert report["promotion"]["accepted"] is False
     assert report["promotion"]["configuration_unchanged"] is False
     assert not (tmp_path / "active_policy.json").exists()
+
+
+def test_provider_error_marks_suite_inconclusive_and_skips_repair(tmp_path, monkeypatch):
+    from slotwise import evaluation
+    from slotwise.providers import OfflineProvider
+
+    class FailingProvider(OfflineProvider):
+        def classify(self, session, text):
+            raise RuntimeError("simulated provider outage")
+
+    scenarios = [
+        {
+            "id": "provider_outage",
+            "title": "Provider outage",
+            "split": "development",
+            "initial": "I need an appointment.",
+            "outcome": "booked",
+        },
+        {
+            "id": "should_not_run",
+            "title": "Following scenario",
+            "split": "development",
+            "initial": "General appointment tomorrow morning.",
+            "outcome": "booked",
+            "date_offset": 1,
+            "period": "morning",
+            "specialty": "general",
+        },
+    ]
+    scenarios_file = tmp_path / "scenarios.json"
+    scenarios_file.write_text(json.dumps(scenarios))
+    monkeypatch.setattr(evaluation, "SCENARIOS_FILE", scenarios_file)
+    monkeypatch.setattr(evaluation, "provider_for", lambda mode: FailingProvider())
+
+    report = run_loop(tmp_path / "runs", "live", repeats=1)
+
+    assert report["evaluation_status"] == "inconclusive"
+    assert report["before"]["complete"] is False
+    assert report["before"]["attempted"] == 1
+    assert report["before"]["total"] == 2
+    assert report["before"]["infrastructure_errors"] == 1
+    assert report["before"]["results"][0]["inconclusive"] is True
+    assert report["patch"] is None
+    assert report["promotion"]["accepted"] is False
+    assert not (tmp_path / "runs" / "active_policy.json").exists()
